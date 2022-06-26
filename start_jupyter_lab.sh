@@ -108,6 +108,26 @@ def script_post_save(model, os_path, contents_manager, **kwargs):
 c.FileContentsManager.post_save_hook = script_post_save
 
 
+##
+# referrence: https://nbconvert.readthedocs.io/en/6.5.0/nbconvert_library.html#Example
+##
+
+from traitlets import Integer
+from nbconvert.preprocessors import Preprocessor
+from datetime import datetime, timezone
+
+class ISO8601DateTimeNow(Preprocessor):
+    """This preprocessor makes the current time in ISO 8601 format available for use in templates"""
+
+    def preprocess(self, nb, resources):
+        iso_now = datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc).isoformat()
+        self.log.info(f'ISO8601DateTimeNow now(): resources["iso8610_datetime_now"] = {iso_now}')
+        resources["iso8610_datetime_now"] = iso_now
+        return nb, resources
+
+c.HTMLExporter.preprocessors = [ISO8601DateTimeNow]
+
+
 EOF
 	sed -i.bak 's/^.*\(c.ServerApp.max_body_size.*=.*[0-9]\).*$/\10/g' "${JUPYTER_CONFIG_DIR}/jupyter_lab_config.py" &&
 	sed -i.bak 's/^.*\(c.ServerApp.max_buffer_size.*=.*[0-9]\).*$/\10/g' "${JUPYTER_CONFIG_DIR}/jupyter_lab_config.py" &&

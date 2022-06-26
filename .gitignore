@@ -1,6 +1,8 @@
 env_*/
 .jupyter/
 
+# Automatically generated html template for nbconvert
+OGP_classic/
 
 # macOS garbage
 .DS_Store
