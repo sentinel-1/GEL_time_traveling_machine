@@ -43,7 +43,7 @@ EOF
 if [ "${UPDATED_404_TODAY}" != "True" ];then
     echo "Updating custom 404 page"
     rm -f "${DOCS_DIR}/404.html"
-    wget --output-document="${DOCS_DIR}/404.html" "https://raw.githubusercontent.com/sentinel-1/sentinel-1.github.io/master/docs/404.html"
+    curl --output "${DOCS_DIR}/404.html" "https://raw.githubusercontent.com/sentinel-1/sentinel-1.github.io/master/docs/404.html"
 else
     echo "SKIPPING custom 404 page update"
 fi
