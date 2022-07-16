@@ -76,7 +76,7 @@ EOF
 
 import io
 import os
-from notebook.utils import to_api_path
+from jupyter_server.utils import to_api_path
 
 _script_exporter = None
 
@@ -121,8 +121,8 @@ class ISO8601DateTimeNow(Preprocessor):
 
     def preprocess(self, nb, resources):
         iso_now = datetime.utcnow().replace(microsecond=0, tzinfo=timezone.utc).isoformat()
-        self.log.info(f'ISO8601DateTimeNow now(): resources["iso8610_datetime_now"] = {iso_now}')
-        resources["iso8610_datetime_now"] = iso_now
+        self.log.info(f'ISO8601DateTimeNow now(): resources["iso8610_datetime_utcnow"] = {iso_now}')
+        resources["iso8610_datetime_utcnow"] = iso_now
         return nb, resources
 
 c.HTMLExporter.preprocessors = [ISO8601DateTimeNow]
