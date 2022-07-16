@@ -560,8 +560,13 @@ MONTH_NUM_2_NAME = {
     M: pd.Timestamp(year=BASE_YEAR, month=M, day=1).month_name()
     for M in df.loc[BASE_YEAR].index}
 
+MONTH_NUM_2_NAME_KA = {
+    M: pd.Timestamp(year=BASE_YEAR, month=M, day=1).month_name(locale='ka_GE.UTF-8')
+    for M in df.loc[BASE_YEAR].index}
+
 if VERBOSE:
     print(json.dumps(MONTH_NUM_2_NAME))
+    print(json.dumps(MONTH_NUM_2_NAME_KA))
 
 
 # In[29]:
@@ -570,52 +575,63 @@ if VERBOSE:
 ##
 # Build the solution for the interactive calculations:
 ##
-raw_html = (f"""
+def get_raw_html(lang: str = "en"):
+    return (f"""
 <br>
-If I will be time traveling <br>
-from 
-<select id="from-month" name="travel-start-month">
-{''.join([f'<option value="{i}">{MONTH_NUM_2_NAME[i]}</option>'
+{"If I will be time traveling" if lang == "en" 
+else "თუ დროში ვიმოგზაურებ" }<br>
+{"from"  if lang == "en" else "საიდან:"}
+<select id="from-month-{lang}" name="travel-start-month">
+{''.join([f'''<option value="{i}">{MONTH_NUM_2_NAME[i] if lang == "en" 
+                                 else MONTH_NUM_2_NAME_KA[i]}</option>'''
           for i in range(1,13)])}
 </select>
-of 
-<select id="from-year" name="travel-start-year">
+{"of"  if lang == "en" else ""} 
+<select id="from-year-{lang}" name="travel-start-year">
 {' '.join([f'<option value="{Y}">{Y}</option>'
            for Y in df_pred.index.get_level_values('Year').unique()])}
 </select>
-year <br>
-to
-<select id="to-month" name="travel-end-month">
-{''.join([f'<option value="{i}">{MONTH_NUM_2_NAME[i]}</option>'
+{"year"  if lang == "en" else "-დან"} <br>
+{"to"  if lang == "en" else "სად:"}
+<select id="to-month-{lang}" name="travel-end-month">
+{''.join([f'''<option value="{i}">{MONTH_NUM_2_NAME[i] if lang == "en"
+                                 else MONTH_NUM_2_NAME_KA[i]}</option>'''
           for i in range(1,13)])}
 </select>
-of 
-<select id="to-year" name="travel-end-year">
+{"of"  if lang == "en" else ""} 
+<select id="to-year-{lang}" name="travel-end-year">
 {' '.join([f'<option value="{Y}" '
            f'{"selected" if Y == BASE_YEAR else ""}>{Y}</option>'
            for Y in df_pred.index.get_level_values('Year').unique()])}
 </select>
-year<br>
-and I got initially
-<input type="number" id="money-before" name="travel-start-money"
+{"year"  if lang == "en" else "-ში"}<br>
+{"and I got initially"  if lang == "en" else "და დასაწყისისთვის მაქვს"}
+<input type="number" id="money-before-{lang}" name="travel-start-money"
        min="1" value="100">
-GEL in my pocket,<br>
-then I will have <u><span id="result-certitude">exactly</span>
-<span id="money-after">#.##</span> GEL</u>
-in the pocket when I reach the destination.
+GEL {"in my pocket,"  if lang == "en" else "ჩემს ჯიბეში,"}<br>
+{"then I will have"  if lang == "en" else "მაშინ მე მექნება"}
+<u><span id="result-certitude-{lang}"></span>
+<strong id="money-after-{lang}">#.##</strong> GEL</u>
+{"in the pocket when I reach the destination."  if lang == "en"
+else "ჯიბეში როცა ჩავალ დანიშნულების ადგილას."}
 <br><br>
-<div>Explanation of the above result:</div>
-<div id="result-explanation-title"
+<div>{"Explanation of the above result:"  if lang == "en" 
+else "ზემოთ მიღებული შედეგის განმარტება:"}</div>
+<div id="result-explanation-title-{lang}"
      style="font-size: larger; margin-top:3px;margin-bottom:3px;"></div>
-<div id="result-explanation-body" 
+<div id="result-explanation-body-{lang}" 
      style="max-width:32em; font-size:small;"></div>
 
 """)
-raw_js = (f"""
+
+
+def get_raw_js(lang="en"):
+    return (f"""
 //<script type="application/javascript">
 var CPI_data = {json.dumps(CPI_data)};
 var CPI_pred_data = {json.dumps(CPI_pred_data)};
-var MONTH_NUM_2_NAME = {json.dumps(MONTH_NUM_2_NAME)};
+var MONTH_NUM_2_NAME = {json.dumps(MONTH_NUM_2_NAME) if lang == "en"
+                        else json.dumps(MONTH_NUM_2_NAME_KA)};
 var MODEL_NAME = "{model.__class__.__name__}";
 """"""
 ((fn)=>{
@@ -625,19 +641,23 @@ var MODEL_NAME = "{model.__class__.__name__}";
     document.addEventListener('DOMContentLoaded', fn);
 }
 })(()=>{
-
+"""f"""
 //console.log("Time Traveling Machine is READY!!!");
-let inFromMonth = document.getElementById("from-month");
-let inFromYear = document.getElementById("from-year");
-let inToMonth = document.getElementById("to-month");
-let inToYear = document.getElementById("to-year");
-let inMoneyBefore = document.getElementById("money-before");
+let inFromMonth = document.getElementById("from-month-{lang}");
+let inFromYear = document.getElementById("from-year-{lang}");
+let inToMonth = document.getElementById("to-month-{lang}");
+let inToYear = document.getElementById("to-year-{lang}");
+let inMoneyBefore = document.getElementById("money-before-{lang}");
 
-let outResultCertitude = document.getElementById("result-certitude");
-let outMoneyAfter = document.getElementById("money-after");
-let outExplanationTitle = document.getElementById("result-explanation-title");
-let outExplanationBody = document.getElementById("result-explanation-body");
-
+let outResultCertitude = document.getElementById("result-certitude-{lang}");
+let outMoneyAfter = document.getElementById("money-after-{lang}");
+let outExplanationTitle = document.getElementById(
+    "result-explanation-title-{lang}"
+);
+let outExplanationBody = document.getElementById(
+    "result-explanation-body-{lang}"
+);
+""""""
 
 let isRecordInData = (year, month, data) => {
     return data.hasOwnProperty(year) && data[year].hasOwnProperty(month);
@@ -650,14 +670,19 @@ let doTimeTravel = (startYear, startMonth, endYear, endMonth, moneyBefore) => {
                           isRecordInData(endYear, endMonth, CPI_data);
                           
     if (isDataAvailable) {
-        outResultCertitude.innerText = "exactly";
+"""f"""
+        outResultCertitude.innerText = "{"exactly"  if lang == "en"
+else "ზუსტად"}";
         var data = CPI_data;
-        var toBeWorthText = "is worth";
-    } else {
-        outResultCertitude.innerText = "approximately";
+        var toBeWorthText = "{"is worth"  if lang == "en"
+else "არის ღირებული როგორც"}";
+    }} else {{
+        outResultCertitude.innerText = "{"approximately"  if lang == "en"
+else "მიახლოებით"}";
         var data = CPI_pred_data;
-        var toBeWorthText = "is estimated to be worth";
-    }
+        var toBeWorthText = "{"is estimated to be worth"  if lang == "en"
+else "სავარაუდოა იყოს ღირებული როგორც"}";
+    }}
     let startCPI = getCPI(startYear, startMonth, data);
     let endCPI = getCPI(endYear, endMonth, data);
     let moneyAfter = startCPI * (moneyBefore/endCPI);
@@ -666,54 +691,54 @@ let doTimeTravel = (startYear, startMonth, endYear, endMonth, moneyBefore) => {
     outMoneyAfter.innerText = moneyAfter;
     
     outExplanationTitle.innerText = [
-            moneyBefore + "₾ in", 
+            moneyBefore + "₾ {"in"  if lang == "en" else ""}", 
             MONTH_NUM_2_NAME[endMonth],
-            endYear,
+            endYear + "{""  if lang == "en" else "-ში"}",
             toBeWorthText,
-            moneyAfter + "₾ in",
+            moneyAfter + "₾ {"in"  if lang == "en" else ""}",
             MONTH_NUM_2_NAME[startMonth],
-            startYear,
+            startYear + "{""  if lang == "en" else "-ში"}",
         ].join(" ");
 
-    if (isDataAvailable) {
-        outExplanationBody.innerHTML = ("In this case the result is"
-        + " directly calculated based on the actual CPI data from"
-        + " Geostat, as the CPI data contains values for both of the"
-        + " selected dates ("
+    if (isDataAvailable) {{
+        outExplanationBody.innerHTML = (
+        " {"Selected dates"  if lang == "en" else "შერჩეული თარიღებიდან"} ("
         + MONTH_NUM_2_NAME[startMonth]
         + " "
         + startYear
-        + " and "
+        + " {"and"  if lang == "en" else "და"} "
         + MONTH_NUM_2_NAME[endMonth]
         + " " 
         + endYear
-        + ")."
-        + " Alternatively, we may use predictions when at least one of"
-        + " the selected dates is not present in the CPI data offered"
-        + " by Geostat, which would normally occur when the date"
-        + " selected is in the future or there is no CPI data available"
-        + " for that date."
+        + ")"
+        + " {"are both present in the actual CPI data from Geostat,"  
+if lang == "en" else "ორივე მოცემულია საქსტატის სფი მონაცემებში,"}"
+        + " {"thus the result is directly calculated from the data."  
+if lang == "en" else
+"შესაბამისად ეს შედეგი პირდაპირ გამოთვლილია მონაცემებზე დაყრდნობით."}"
         );
-    } else {
-        outExplanationBody.innerHTML = ("In this case the result is"
-        + " predicted using the "
-        + MODEL_NAME
-        + " model which is trained on"
-        + " the CPI data from Geostat, as the CPI data does NOT contain"
-        + " values for both of the selected dates ("
+    }} else {{
+        outExplanationBody.innerHTML = (
+        " {"One (or both) of the selected dates"
+if lang == "en" else "შერჩეული თარიღებიდან"} ("
         + MONTH_NUM_2_NAME[startMonth]
         + " "
         + startYear
-        + " and "
+        + " {"and"  if lang == "en" else "და"} "
         + MONTH_NUM_2_NAME[endMonth]
-        + " "
+        + " " 
         + endYear
-        + ")."
-        + " Alternatively, we may use direct calculation when both of"
-        + " the selected dates are present in the CPI data offered by"
-        + " Geostat, which would normally occur when both of the"
-        + " selected dates are in the past."
+        + ")"
+        + " {"is not present in the CPI data from Geostat,"  
+if lang == "en" else
+" ერთ-ერთი (ან ორივე) არ არის მოცემული საქსტატის სფი მონაცემებში,"}"
+        + " {"thus the result is obtained using the "  
+if lang == "en" else
+"შესაბამისად ეს შედეგი მიღებულია "}"
+        + MODEL_NAME
+        + " {"model."  if lang == "en" else "მოდელის გამოყენებით."}"
         );
+""""""
     }
 };
 
@@ -735,6 +760,17 @@ inMoneyBefore.dispatchEvent(event);
 });
 //</script>
 """)
+
+
+with open("GEL_TTM_ka.html", "w") as f:
+    f.write(get_raw_html(lang="ka"))
+    
+with open("GEL_TTM_ka.js", "w") as f:
+    f.write(get_raw_js(lang="ka"))
+
+
+raw_html = get_raw_html()
+raw_js = get_raw_js()
 
 if VERBOSE:
     print(raw_html)

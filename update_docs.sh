@@ -4,6 +4,7 @@
 VENV_NAME=env_GEL_time_traveling_machine
 
 NOTEBOOK_NAME="GEL Time Machine.ipynb"
+NOTEBOOK_NAME_KA="GEL დროის მანქანა.ipynb"
 
 
 SELF=$(python3 -c "import os; print(os.path.realpath('${BASH_SOURCE[0]}'))")
@@ -14,6 +15,7 @@ export JUPYTER_CONFIG_DIR="${SCRIPT_DIR}/.jupyter"
 
 
 DOCS_DIR="${SCRIPT_DIR}/docs"
+DOCS_DIR_KA="${SCRIPT_DIR}/docs/ka"
 
 
 ##
@@ -24,10 +26,19 @@ DOCS_DIR="${SCRIPT_DIR}/docs"
   --to html --output-dir="${DOCS_DIR}" --output="index" --template OGP_classic
 
 ##
+# Generate HTML (ka_GE)
+##
+"${ENV_BIN}jupyter-nbconvert" "${NOTEBOOK_NAME_KA}" \
+  --config "${JUPYTER_CONFIG_DIR}/jupyter_lab_config.py" \
+  --to html --output-dir="${DOCS_DIR_KA}" --output="index" --template OGP_classic_ka
+
+
+##
 # Generate PDF
 ##
 "${ENV_BIN}jupyter-nbconvert" "${NOTEBOOK_NAME}" \
   --embed-images --to pdf --output-dir="${DOCS_DIR}"
+
 
 ##
 # Update custom 404 page
@@ -63,7 +74,7 @@ if [ "${1}" == "commit" ];then
             [Nn]*) echo "Abort."; exit -1 ;;
         esac
     done
-    echo " - Resetting the git stating area"
+    echo " - Resetting the git staging area"
     git reset
     echo " - Adding the ./docs/ directory to the git staging area"
     git add ./docs/

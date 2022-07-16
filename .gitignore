@@ -3,6 +3,8 @@ env_*/
 
 # Automatically generated html template for nbconvert
 OGP_classic/
+OGP_classic_ka/
+/GEL_TTM_ka.*
 
 # macOS garbage
 .DS_Store
