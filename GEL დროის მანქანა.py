@@ -79,7 +79,6 @@ display(HTML("""<script type="application/javascript">
 }
 })(()=>{
 let ttm_container = document.getElementById("time-traveling-machine-container-ka");
-console.log("HERE WE GO!!!",ttm_container)
 """f"""
 ttm_container.insertAdjacentHTML("afterbegin", `{raw_html}`);
 let script = document.createElement('script');
